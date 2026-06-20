@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account · CoffeeGuard AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="auth-shell">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <span class="logo-dot"></span>
+            <span>CoffeeGuard AI</span>
+        </div>
+        <h2>Create your account</h2>
+        <p class="subtitle">Join CoffeeGuard AI to start scanning coffee leaves and tracking yield risk.</p>
+
+        {% if error %}
+            <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/register_user">
+            <div class="field-group">
+                <label for="fullname">Full name</label>
+                <input type="text" id="fullname" name="fullname" placeholder="Jane Mukasa" required>
+            </div>
+
+            <div class="field-group">
+                <label for="email">Email address</label>
+                <input type="email" id="email" name="email" placeholder="you@farm.com" required>
+            </div>
+
+            <div class="field-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required minlength="6">
+            </div>
+            <p class="password-hint">Use at least 6 characters.</p>
+
+            <div class="field-group">
+                <label for="confirm_password">Confirm password</label>
+                <input type="password" id="confirm_password" name="confirm_password" placeholder="••••••••" required minlength="6">
+            </div>
+
+            <button type="submit" class="full">Create Account</button>
+        </form>
+
+        <div class="auth-footer-text">
+            Already registered? <a href="/login">Sign in</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

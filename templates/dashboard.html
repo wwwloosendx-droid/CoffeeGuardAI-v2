@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard · CoffeeGuard AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app-shell">
+    <div class="sidebar">
+        <div class="brand"><span class="logo-dot"></span><span>CoffeeGuard AI</span></div>
+        <nav>
+            <a href="/dashboard" class="active"><span class="ic">📊</span> Dashboard</a>
+            <a href="/upload"><span class="ic">🔬</span> Detection</a>
+            <a href="/logout"><span class="ic">↩</span> Logout</a>
+        </nav>
+        <div class="user-pill">
+            <span class="name">{{ fullname or "Farmer" }}</span>
+            <span class="role">{{ session.get('role', 'farmer') if session else 'farmer' }}</span>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="topbar">
+            <div>
+                <h1>Welcome back, {{ fullname }}</h1>
+                <p class="greeting-sub" id="liveClock"></p>
+            </div>
+            <div class="actions">
+                <button id="exportCsvBtn" class="btn btn-outline">⬇ Export CSV</button>
+                <a class="btn" href="/upload">+ New Detection</a>
+            </div>
+        </div>
+
+        <!-- ============ LATEST PREDICTION ============ -->
+        <div class="panel" style="margin-top:18px;">
+            <h3 style="margin-top:0; color: var(--coffee-dark);">Latest Scan</h3>
+
+            {% if history %}
+                {% set latest = history[0] %}
+                {% set label = (latest[3] or "")|lower %}
+                <div class="latest-grid">
+                    <div>
+                        {% if "healthy" in label %}
+                            <span class="badge healthy">Healthy</span>
+                        {% elif "rust" in label %}
+                            <span class="badge rust">Rust Detected</span>
+                        {% elif "wilt" in label %}
+                            <span class="badge wilt">Wilt Detected</span>
+                        {% else %}
+                            <span class="badge unknown">Result</span>
+                        {% endif %}
+
+                        <p class="muted">Disease classification</p>
+                        <div class="metric" style="font-size:22px;">{{ latest[3] }}</div>
+
+                        <p class="muted" style="margin-top:14px;">Model confidence</p>
+                        <div class="progress-track"><div class="progress-fill" style="width: {{ (latest[4] * 100)|round(1) }}%;"></div></div>
+                        <p style="font-size:13px;">{{ (latest[4] * 100)|round(2) }}%</p>
+
+                        <p class="muted" style="margin-top:14px;">Estimated yield outlook</p>
+                        <div class="metric" style="font-size:22px;">{{ latest[7] or 0 }}%</div>
+                        <p style="font-size:13px;">{{ latest[8] or "Yield outlook will appear after the next prediction." }}</p>
+                        <p class="muted" style="margin-top:10px;">Scanned on {{ latest[5] }}</p>
+                    </div>
+
+                    <div>
+                        <p class="muted">Uploaded leaf</p>
+                        <img class="preview" src="/static/uploads/{{ latest[2] }}" alt="Uploaded coffee leaf">
+                    </div>
+
+                    <div>
+                        <p class="muted">AI attention heatmap (Grad-CAM)</p>
+                        {% if latest[6] %}
+                            <img class="preview" src="/static/heatmaps/{{ latest[6] }}" alt="Coffee leaf heatmap">
+                        {% else %}
+                            <p class="muted">No heatmap saved for this older prediction. Upload a new image to generate one.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <span class="big-emoji">🍃</span>
+                    No prediction yet. <a href="/upload">Upload a leaf image</a> to see the disease result, heatmap, and yield outlook.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- ============ SUMMARY CARDS ============ -->
+        <div class="section-title">Overview</div>
+        <div class="cards">
+            <div class="card">
+                <div class="icon-badge">🔢</div>
+                <div class="label">Total Scans</div>
+                <div class="metric">{{ total_scans }}</div>
+                <div class="delta">All-time uploads on your account</div>
+            </div>
+
+            <div class="card">
+                <div class="icon-badge blue">🎯</div>
+                <div class="label">Avg Confidence</div>
+                <div class="metric">{{ avg_confidence }}%</div>
+                <div class="delta">Across your last {{ history|length }} scans</div>
+            </div>
+
+            <div class="card">
+                <div class="icon-badge">🌿</div>
+                <div class="label">Healthy Scans</div>
+                <div class="metric">{{ healthy_count }}</div>
+                <div class="delta up">Out of {{ history|length }} recent scans</div>
+            </div>
+
+            <div class="card">
+                <div class="icon-badge rust">⚠️</div>
+                <div class="label">At-Risk Scans</div>
+                <div class="metric">{{ at_risk_count }}</div>
+                <div class="delta down">Rust / wilt symptoms flagged</div>
+            </div>
+
+            <div class="card">
+                <div class="icon-badge amber">🌾</div>
+                <div class="label">Avg Yield Outlook</div>
+                <div class="metric">{{ avg_yield }}%</div>
+                <div class="delta">Best {{ best_yield }}% · Worst {{ worst_yield }}%</div>
+            </div>
+
+            <div class="card">
+                <div class="icon-badge">🔁</div>
+                <div class="label">Most Frequent Result</div>
+                <div class="metric" style="font-size:18px;">{{ most_common_disease }}</div>
+                <div class="delta">Based on recent scan history</div>
+            </div>
+        </div>
+
+        <!-- ============ CHARTS ============ -->
+        <div class="section-title">Trends &amp; Distribution</div>
+        <div class="grid-2">
+            <div class="panel">
+                <h3 style="margin-top:0;">Confidence &amp; Yield Trend</h3>
+                <canvas id="trendChart" height="220"></canvas>
+            </div>
+            <div class="panel">
+                <h3 style="margin-top:0;">Disease Distribution</h3>
+                <canvas id="diseaseChart" height="220"></canvas>
+            </div>
+        </div>
+
+        <!-- ============ HISTORY TABLE ============ -->
+        <div class="section-title">Scan History</div>
+        <div class="panel">
+            {% if history %}
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Leaf</th>
+                            <th>Result</th>
+                            <th>Confidence</th>
+                            <th>Yield Outlook</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in history %}
+                        <tr>
+                            <td><img class="history-thumb" src="/static/uploads/{{ row[2] }}" alt="Prediction image"></td>
+                            <td><strong>{{ row[3] }}</strong></td>
+                            <td>{{ (row[4] * 100)|round(2) }}%</td>
+                            <td>{{ row[7] or 0 }}%</td>
+                            <td class="muted">{{ row[5] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty-state">
+                    <span class="big-emoji">📭</span>
+                    No prediction history yet.
+                </div>
+            {% endif %}
+        </div>
+
+        <footer class="app-footer">
+            CoffeeGuard AI — Machine learning–based coffee disease detection and yield prediction · Dissertation Project
+        </footer>
+    </div>
+</div>
+
+<script>
+    window.DASHBOARD_DATA = {
+        chartLabels: {{ chart_labels | tojson }},
+        chartValues: {{ chart_values | tojson }},
+        trendLabels: {{ trend_labels | tojson }},
+        confidenceTrend: {{ confidence_trend | tojson }},
+        yieldTrend: {{ yield_trend | tojson }},
+        historyRows: {{ history_rows_json | tojson }}
+    };
+</script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

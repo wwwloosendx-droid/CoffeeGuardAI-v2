@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detect Disease · CoffeeGuard AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+    <div class="sidebar">
+        <div class="brand"><span class="logo-dot"></span><span>CoffeeGuard AI</span></div>
+        <nav>
+            <a href="/dashboard"><span class="ic">📊</span> Dashboard</a>
+            <a href="/upload" class="active"><span class="ic">🔬</span> Detection</a>
+            <a href="/logout"><span class="ic">↩</span> Logout</a>
+        </nav>
+    </div>
+
+    <div class="main">
+        <div class="upload-shell" style="min-height: auto; padding: 0;">
+            <div class="panel" style="width: min(560px, 100%); margin: 0 auto;">
+                <h2 style="margin-top:0; color: var(--coffee-dark);">Upload Coffee Leaf Image</h2>
+                <p class="muted">Drop a clear, well-lit photo of a single coffee leaf for instant disease detection and a yield outlook.</p>
+
+                <form method="POST" action="/predict" enctype="multipart/form-data" id="uploadForm">
+                    <div class="dropzone" id="dropzone">
+                        <div class="dz-icon">🍃</div>
+                        <div class="dz-text">Click to browse or drag &amp; drop a leaf photo</div>
+                        <div class="dz-sub">JPG or PNG, up to 16MB · <span id="fileNameLabel">no file selected</span></div>
+                    </div>
+                    <input type="file" id="fileInput" name="image" accept="image/*" required>
+
+                    <div class="preview-wrap" id="previewWrap">
+                        <img id="previewImg" alt="Selected leaf preview">
+                    </div>
+
+                    <button type="submit" class="full" id="submitBtn" style="margin-top:20px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <span class="spinner" id="spinner"></span>
+                        <span id="submitLabel">Analyze Leaf</span>
+                    </button>
+                </form>
+
+                <ul class="tips-list">
+                    <li>Photograph one leaf against a plain background.</li>
+                    <li>Avoid heavy shadows, blur, or extreme close-ups.</li>
+                    <li>Capture both healthy and discolored areas of the leaf when visible.</li>
+                </ul>
+
+                <a class="btn btn-outline full" href="/dashboard" style="margin-top:16px;">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+</body>
+</html>

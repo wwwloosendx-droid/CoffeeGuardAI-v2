@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login · CoffeeGuard AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="auth-shell">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <span class="logo-dot"></span>
+            <span>CoffeeGuard AI</span>
+        </div>
+        <h2>Welcome back</h2>
+        <p class="subtitle">Sign in to detect coffee leaf disease and view your yield outlook.</p>
+
+        {% if error %}
+            <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/login_user">
+            <div class="field-group">
+                <label for="email">Email address</label>
+                <input type="email" id="email" name="email" placeholder="you@farm.com" required>
+            </div>
+
+            <div class="field-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="full">Sign In</button>
+        </form>
+
+        <div class="auth-footer-text">
+            New to CoffeeGuard AI? <a href="/register">Create an account</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>
