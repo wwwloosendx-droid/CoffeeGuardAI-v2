@@ -43,8 +43,7 @@ Thumbs.db
 *.sqlite3
 
 # Model files (optional - comment out if you want to commit models)
-*.pth
-*.pkl
+
 *.h5
 
 # Uploads
